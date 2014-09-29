@@ -80,30 +80,16 @@ echo(str("Size: [", motor_size(nema_17())[x], ", ", motor_size(nema_17())[y], ",
 
 echo(str("Ratio: ", planetary_ratio(), ":1"));
 
-rendering = 0;  //  0: assembled
+rendering = 1;  //  0: assembled
                 //  1: Full plate.
-                //  2: Common plate.
-                //  3: Printed sun.
-                //  4: Steel sun.
 
 if (rendering == 0)
     gearbox_assembly();
     
 if (rendering == 1)
 {
-    gearbox_common_plate();
-    gearbox_printed_sun_plate();
-    gearbox_metal_sun_plate();
+    gearbox_plate();
 }
-
-if (rendering == 2)
-    gearbox_common_plate();
-
-if (rendering == 3)
-    gearbox_printed_sun_plate();
-
-if (rendering == 4)
-    gearbox_metal_sun_plate();
 
 module gearbox_assembly()
 {
@@ -124,44 +110,43 @@ module gearbox_assembly()
 	cover();
 }
 
-module gearbox_common_plate()
+module gearbox_plate()
 {
+	translate([-23, -23])
+	base(print=1);
+
+    translate([-23, 23])
 	fixed_gear(print=1);
 
-	translate([-10, 38])
-	planet_carrier_bottom(print=1);
+	translate([23, -23])
+	cover(print=1);
+    
+    if (with_metal_sun == false)
+        translate([12, 12])
+        sun_gear(print=1);
 
-	translate([18, 42])
-	rotate(0)
-	for(i=[0:num_planets-1]) rotate(i*360/num_planets) translate([10, 0])
+    translate([7, 33])
 		planet_gear();
 
-	translate([38, 20])
+    translate([33, 7])
+		planet_gear();
+
+    translate([53, -18])
+		planet_gear();
+
+	translate([35, 35])
+	output_gear(print=1);
+    
+	translate([6, 57])
+	planet_carrier_bottom(print=1);
+
+	translate([57, 6])
 	planet_carrier_top(print=1);
 
-	translate([-45, 42])
-	output_gear(print=1);
 
-	translate([-45, 0])
-	cover(print=1);
 
 	translate([-7, -3, .5])
 	%cube([120, 130, 1], center=true);
-}
-
-module gearbox_printed_sun_plate()
-{
-	translate([0, -45])
-	base(print=1);
-
-	translate([38, -9])
-	sun_gear(print=1);
-}
-
-module gearbox_metal_sun_plate()
-{
-	translate([-45, -45])
-	base(print=1, short=1);
 }
 
 module case_outline()
@@ -245,11 +230,11 @@ module base_void()
 
 		if (with_nema_14 == true)
 		{
-			translate([0, 0, 10+m3_bolt_head_height])
+			translate([0, 0, 10+4])
 			rotate([180, 0, 0])
 				motor_bolts(nema_17())
 			{
-				M3_nut_hole(length=10, support=true);
+				M3_nut_hole(length=10, head_length=4, support=true);
 			}
 		}
 }
@@ -486,7 +471,7 @@ module planet_carrier_void()
 				rotate([180, 0, 0])
 				translate([0, 0, -.1])
 				rotate(90)
-				M3_nut_hole(length=planet_carrier_height/2-5+.1, support=1);
+				M3_nut_hole(length=planet_carrier_height/2-5+.1, head_length = 5, support=1);
 				translate([0, 0, -.1])
 				M3_bolt_hole(length=planet_carrier_height/2-4+.1, head_length = 4, support=1);
 			}
@@ -673,7 +658,7 @@ module M3_bolt_hole(length, head_length = m3_bolt_head_height, support=0)
 	}
 }
 
-module M3_nut_hole(length, head_length = m3_bolt_head_height, support=0)
+module M3_nut_hole(length, head_length = 4, support=0)
 {
 	translate([0, 0, -.1])
 	cylinder(h=length+.1+(support==0 ? .1 : -layer_height), r=m3_diameter/2);
